@@ -294,15 +294,16 @@ export async function POST(request: NextRequest) {
       const hasEnoughBalance = balanceInEth >= sendingEth;
       
       let gasEstimate = "21000"; // Standard ETH transfer gas
-      let warnings = [];
+      const warnings: Warning[] = [];
       
       // Try to estimate gas, but don't fail if it doesn't work
       try {
         const gas = await alchemy.core.estimateGas(transactionRequest);
         gasEstimate = gas.toString();
         console.log('Gas estimate successful:', gasEstimate);
-      } catch (gasError: any) {
-        console.log('Gas estimation failed, using default:', gasError.message);
+      } catch (gasError: unknown) {
+        const errorMessage = gasError instanceof Error ? gasError.message : 'Unknown error';
+        console.log('Gas estimation failed, using default:', errorMessage);
         warnings.push({
           severity: 'MEDIUM' as const,
           message: 'Could not estimate gas precisely. Using standard estimate.'
@@ -351,9 +352,10 @@ export async function POST(request: NextRequest) {
       const clarityResult = parseSimulationResult(simulationResponse, body.from);
       return NextResponse.json(clarityResult);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Balance check failed:', error);
-      throw new Error(`Failed to check account balance: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to check account balance: ${errorMessage}`);
     }
     
   } catch (error) {

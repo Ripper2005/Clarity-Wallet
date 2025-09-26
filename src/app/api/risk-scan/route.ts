@@ -14,8 +14,27 @@ interface RiskScanResult {
   scanTimestamp: string;
 }
 
+// Define interfaces for Zapper data
+interface ZapperBalance {
+  token?: {
+    symbol?: string;
+  };
+  balanceUSD?: number;
+  balance?: string;
+  healthRatio?: number;
+}
+
+interface ZapperApp {
+  appId?: string;
+  balances?: ZapperBalance[];
+}
+
+interface ZapperData {
+  data?: ZapperApp[];
+}
+
 // AI Risk Analysis Function
-function analyzePositions(zapperData: any, walletAddress: string): Risk[] {
+function analyzePositions(zapperData: ZapperData | null, walletAddress: string): Risk[] {
   const risks: Risk[] = [];
   
   try {

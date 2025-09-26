@@ -15,7 +15,7 @@ import Button from '@/components/ui/Button';
 
 // Define the types based on our API contract
 interface Warning {
-  severity: 'INFO' | 'MEDIUM' | 'CRITICAL';
+  severity: 'INFO' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   message: string;
 }
 
@@ -48,6 +48,8 @@ export default function ClarityModal({ result, isOpen, onClose }: ClarityModalPr
     switch (severity) {
       case 'CRITICAL':
         return <ExclamationCircleIcon className="w-5 h-5 text-red-400" />;
+      case 'HIGH':
+        return <ExclamationTriangleIcon className="w-5 h-5 text-orange-400" />;
       case 'MEDIUM':
         return <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400" />;
       case 'INFO':
@@ -61,6 +63,8 @@ export default function ClarityModal({ result, isOpen, onClose }: ClarityModalPr
     switch (severity) {
       case 'CRITICAL':
         return 'border-red-500/50 bg-red-900/20';
+      case 'HIGH':
+        return 'border-orange-500/50 bg-orange-900/20';
       case 'MEDIUM':
         return 'border-yellow-500/50 bg-yellow-900/20';
       case 'INFO':
@@ -196,6 +200,7 @@ export default function ClarityModal({ result, isOpen, onClose }: ClarityModalPr
                             <div className="flex items-center mb-1">
                               <span className={`text-sm font-medium ${
                                 warning.severity === 'CRITICAL' ? 'text-red-300' :
+                                warning.severity === 'HIGH' ? 'text-orange-300' :
                                 warning.severity === 'MEDIUM' ? 'text-yellow-300' :
                                 'text-blue-300'
                               }`}>

@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Alchemy, Network } from 'alchemy-sdk';
 import { formatEther, formatUnits } from 'ethers';
 
+// Define interfaces for the simulation response
+interface SimulationError {
+  message?: string;
+}
+
+interface SimulationChange {
+  assetType: string;
+  changeType: string;
+  from: string;
+  to: string;
+  amount: string;
+  symbol?: string;
+  decimals?: number;
+  spender?: string;
+  healthRatio?: number;
+}
+
+interface SimulationResponse {
+  error?: SimulationError;
+  changes?: SimulationChange[];
+  gasUsed?: string;
+  isValid?: boolean;
+  warnings?: Warning[];
+}
+
 // Define the TypeScript interfaces for the API contract
 interface SimulateTransactionRequest {
   from: string;      // The user's wallet address (e.g., "0x...")
@@ -21,7 +46,7 @@ interface AssetChange {
 }
 
 interface Warning {
-  severity: 'INFO' | 'MEDIUM' | 'CRITICAL';
+  severity: 'INFO' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   message: string;
 }
 
@@ -48,7 +73,7 @@ export async function GET() {
 }
 
 // Helper function to parse Alchemy simulation results into ClarityResult format
-function parseSimulationResult(alchemyResponse: any, userAddress: string): ClarityResult {
+function parseSimulationResult(alchemyResponse: SimulationResponse, userAddress: string): ClarityResult {
   // Safety check: if there's an error in the response
   if (alchemyResponse.error) {
     return {
@@ -95,7 +120,7 @@ function parseSimulationResult(alchemyResponse: any, userAddress: string): Clari
       // Look for ERC20 token approvals
       else if (change.assetType === 'ERC20' && change.changeType === 'APPROVE') {
         // Extract data from the change object
-        const { owner, spender, amount, symbol } = change;
+        const { spender, symbol } = change;
         
         // Check if this is an infinite approval (max uint256)
         if (change.amount === '115792089237316195423570985008687907853269984665640564039457584007913129639935') {
@@ -126,7 +151,7 @@ function parseSimulationResult(alchemyResponse: any, userAddress: string): Clari
       // Look for ERC20 token transfers
       else if (change.assetType === 'ERC20' && change.changeType === 'TRANSFER') {
         // Extract data from the change object
-        const { from, to, amount, symbol, decimals } = change;
+        const { from, to, symbol } = change;
         
         // Format the amount using proper decimals
         const formattedAmount = formatUnits(change.amount, change.decimals || 18);
@@ -140,7 +165,7 @@ function parseSimulationResult(alchemyResponse: any, userAddress: string): Clari
             assetChanges: [{
               assetType: 'ERC20',
               changeType: 'SEND',
-              symbol: symbol,
+              symbol: symbol || 'UNKNOWN',
               amount: formattedAmount,
               from: from,
               to: to
@@ -155,7 +180,7 @@ function parseSimulationResult(alchemyResponse: any, userAddress: string): Clari
             assetChanges: [{
               assetType: 'ERC20',
               changeType: 'RECEIVE',
-              symbol: symbol,
+              symbol: symbol || 'UNKNOWN',
               amount: formattedAmount,
               from: from,
               to: to

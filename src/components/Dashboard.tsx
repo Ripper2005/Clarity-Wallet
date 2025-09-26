@@ -3,7 +3,7 @@
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { parseEther, formatEther } from 'ethers';
+import { parseEther, formatEther, BrowserProvider } from 'ethers';
 import { 
   WalletIcon, 
   DocumentMagnifyingGlassIcon, 
@@ -17,7 +17,7 @@ import { RiskReportModal } from '@/components/RiskReportModal';
 
 // Define the types for our API
 interface Warning {
-  severity: 'INFO' | 'MEDIUM' | 'CRITICAL';
+  severity: 'INFO' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   message: string;
 }
 
@@ -72,8 +72,9 @@ export default function Dashboard() {
       try {
         const embeddedWallet = wallets.find((wallet) => wallet.walletClientType === 'privy');
         if (embeddedWallet) {
-          const provider = await embeddedWallet.getEthersProvider();
-          const userBalance = await provider.getBalance();
+          const provider = await embeddedWallet.getEthereumProvider();
+          const ethersProvider = new BrowserProvider(provider);
+          const userBalance = await ethersProvider.getBalance(embeddedWallet.address);
           setBalance(parseFloat(formatEther(userBalance)).toFixed(4));
         }
       } catch (error) {
